@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	//Find intersections
+	//----------Find intersections---------------
 	vector<Vec2i> iPoints;
 	for (int i = 0; i < linesV.size(); i++) {
 		for (int j = 0; j < linesH.size(); j++) {
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	//Crop the plate
+	//----------Crop the plate-------------------
 	Mat plateImg;
 	if (!iPoints.empty()) {
 		for (int i = 0; i < iPoints.size() - 1; i++) {
@@ -122,8 +122,7 @@ int main(int argc, char** argv) {
 				if (l > 1.3 && l < 1.4) {
 					Mat plateTempImg, plateGrayImg, plateThresholdImg;
 					int black = 0, white = 0;
-					//Rect(Point2i(int(iPoints[i][0]), int(iPoints[i][1])), Point2i(int(iPoints[j][0]), int(iPoints[j][1])));
-					//rectangle(lineImg, Rect(Point2i(int(iPoints[i][0]), int(iPoints[i][1])), Point2i(int(iPoints[j][0]), int(iPoints[j][1]))), Scalar(0, 255, 255), 3, 8, 0);
+
 					plateTempImg = input(Rect(Point2i(int(iPoints[i][0]), int(iPoints[i][1])), Point2i(int(iPoints[j][0]), int(iPoints[j][1]))));
 					cvtColor( plateTempImg, plateGrayImg, CV_BGR2GRAY );
 					threshold( plateGrayImg, plateThresholdImg, 100, 255, 0 );
@@ -133,14 +132,34 @@ int main(int argc, char** argv) {
 							else white++;
 						}
 					}
+
 					if (white / black >= 2) plateImg = plateTempImg;
 				}
 			}
 		}
 	}
 
+	//----------Extract characters------------
+	Mat plateGrayImg, plateBinImg;
+	cvtColor(plateImg, plateGrayImg, CV_BGR2GRAY);
+	threshold(plateGrayImg, plateBinImg, 120, 255, CV_THRESH_BINARY);
+	Mat morpho;
+	Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3), Point(1, 1));
+	erode(plateBinImg, morpho, element, Point(-1, -1), 3);
+	//imshow("Erode", morpho);
+	vector < vector<Point> > contours;
+	findContours(morpho, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+	for (size_t i = 0; i < contours.size(); i++) {
+		Rect r = boundingRect(contours[i]);
+		if (r.width / (double)r.height > 1.30f && r.width / (double)r.height < 1.35f)
+			rectangle(plateImg, r, Scalar(0, 0, 255), 2, 8, 0);
+		else
+			rectangle(plateImg, r, Scalar(0, 255, 0), 1, 8, 0);
+	}
+
 	imshow("Line", lineImg);
-	//imshow("Edge", lineImg1);
+	imshow("bin", plateBinImg);
+	imshow("Morpho", morpho);
 	imshow("Plate", plateImg);
 
 	waitKey(0);
