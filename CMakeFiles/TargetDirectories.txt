@@ -1,0 +1,3 @@
+/media/sda6/DIP/linux/LPR/CMakeFiles/edit_cache.dir
+/media/sda6/DIP/linux/LPR/CMakeFiles/rebuild_cache.dir
+/media/sda6/DIP/linux/LPR/CMakeFiles/lpr.dir
