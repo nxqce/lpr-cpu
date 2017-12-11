@@ -140,26 +140,36 @@ int main(int argc, char** argv) {
 	}
 
 	//----------Extract characters------------
-	Mat plateGrayImg, plateBinImg;
-	cvtColor(plateImg, plateGrayImg, CV_BGR2GRAY);
-	threshold(plateGrayImg, plateBinImg, 120, 255, CV_THRESH_BINARY);
-	Mat morpho;
-	Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3), Point(1, 1));
-	erode(plateBinImg, morpho, element, Point(-1, -1), 3);
+	//Mat plateGrayImg, plateBinImg;
+	//cvtColor(plateImg, plateGrayImg, CV_BGR2GRAY);
+	//threshold(plateGrayImg, plateBinImg, 120, 255, CV_THRESH_BINARY);
+	resize(plateImg, plateImg, Size(270, 200));
+	Mat plateBlurImg, plateEdgeImg;
+	//GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
+	Canny(plateImg, plateEdgeImg, 50, 300, 3) ;
+	//Mat morpho;
+	//Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3), Point(1, 1));
+	//erode(plateImg, morpho, element, Point(-1, -1), 3);
 	//imshow("Erode", morpho);
+	//cvtColor(morpho, morpho, CV_BGR2GRAY);
+	//threshold(morpho, morpho, 110, 255, CV_THRESH_BINARY);
 	vector < vector<Point> > contours;
-	findContours(morpho, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+	findContours(plateEdgeImg, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+	vector<vector<Point> > contours_poly( contours.size() );
 	for (size_t i = 0; i < contours.size(); i++) {
-		Rect r = boundingRect(contours[i]);
-		if (r.width / (double)r.height > 1.30f && r.width / (double)r.height < 1.35f)
-			rectangle(plateImg, r, Scalar(0, 0, 255), 2, 8, 0);
-		else
-			rectangle(plateImg, r, Scalar(0, 255, 0), 1, 8, 0);
+		//Rect r = boundingRect(contours[i]);
+		approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+       	//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+		Rect r = boundingRect( Mat(contours_poly[i]) );
+		if ((r.width / (double)r.height > 0.2f && r.width / (double)r.height < 0.5f)
+			&& (r.height < 100 && r.height > 70))
+			rectangle(plateImg, r, Scalar(0, 0, 255), 1, 8, 0);
+		
 	}
 
 	imshow("Line", lineImg);
-	imshow("bin", plateBinImg);
-	imshow("Morpho", morpho);
+	imshow("Edge", plateEdgeImg);
+	//imshow("Morpho", morpho);
 	imshow("Plate", plateImg);
 
 	waitKey(0);
