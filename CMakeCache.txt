@@ -171,16 +171,20 @@ LPR_BINARY_DIR:STATIC=/media/sda6/DIP/linux/LPR
 //Value Computed by CMake
 LPR_SOURCE_DIR:STATIC=/media/sda6/DIP/linux/LPR
 
+OPENCV_FOUND:BOOL=FALSE
+
 //Path where debug 3rdpaty OpenCV dependencies are located
 OpenCV_3RDPARTY_LIB_DIR_DBG:PATH=
 
 //Path where release 3rdpaty OpenCV dependencies are located
 OpenCV_3RDPARTY_LIB_DIR_OPT:PATH=
 
-OpenCV_CONFIG_PATH:FILEPATH=/home/quangce/opencv-2.4.13.4/release
+OpenCV_CONFIG_PATH:FILEPATH=/home/quangce/opencv-2.4.13.4/cmake
 
 //No help, variable specified on the command line.
 OpenCV_DIR:UNINITIALIZED=/home/quangce/opencv-2.4.13.4/release
+
+OpenCV_FOUND:BOOL=FALSE
 
 //Path where debug OpenCV libraries are located
 OpenCV_LIB_DIR_DBG:PATH=
