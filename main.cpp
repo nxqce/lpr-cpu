@@ -134,7 +134,8 @@ int main(int argc, char** argv) {
 						}
 					}
 
-					if (white / black >= 2) plateImg = plateTempImg;
+					if (black > 0 && white / black >= 2)
+						plateImg = plateTempImg;
 				}
 			}
 		}
