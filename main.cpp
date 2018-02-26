@@ -100,9 +100,10 @@ int main(int argc, char** argv) {
 	vector<Vec2i> iPoints;
 	for (int i = 0; i < linesV.size(); i++) {
 		for (int j = 0; j < linesH.size(); j++) {
-			int x = (int)xSolve(linesV[i][0], -1, - linesV[i][1], linesH[j][0], -1, - linesH[j][1]);
-			int y = (int)ySolve(linesV[i][0], -1, - linesV[i][1], linesH[j][0], -1, - linesH[j][1]);
+			int x = (int)xSolve(linesV[i][0], -1, -linesV[i][1], linesH[j][0], -1, -linesH[j][1]);
+			int y = (int)ySolve(linesV[i][0], -1, -linesV[i][1], linesH[j][0], -1, -linesH[j][1]);
 			if (x < 10 || y < 10) continue;
+			if (x > input.cols || y > input.rows) continue;
 			if (((int)lineImgH.at<cv::Vec3b>(y, x)[2] == 255) && ((int)lineImgV.at<cv::Vec3b>(y, x)[2] == 255)) {
 				iPoints.push_back(Vec2i(x, y));
 				line(lineImg, Point(x, y), Point(x, y), Scalar(0, 255, 0), 5, CV_AA);
