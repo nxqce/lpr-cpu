@@ -124,11 +124,11 @@ int main(int argc, char** argv) {
 					int black = 0, white = 0;
 
 					plateTempImg = input(Rect(Point2i(int(iPoints[i][0]), int(iPoints[i][1])), Point2i(int(iPoints[j][0]), int(iPoints[j][1]))));
-					cvtColor( plateTempImg, plateGrayImg, CV_BGR2GRAY );
-					threshold( plateGrayImg, plateThresholdImg, 100, 255, 0 );
-					for (int h = 0; h < plateThresholdImg.rows; h++) {
-						for (int k = 0; k < plateThresholdImg.cols; k++){
-							if (plateThresholdImg.at<int>(h, k) == 0) black++;
+					cvtColor(plateTempImg, plateGrayImg, CV_BGR2GRAY);
+					threshold(plateGrayImg, plateThresholdImg, 100, 255, 0);
+					for (int m = 0; m < plateThresholdImg.cols; m++) {
+						for (int n = 0; n < plateThresholdImg.rows; n++) {
+							if ((int)plateThresholdImg.at<uchar>(Point(m, n)) == 0) black++;
 							else white++;
 						}
 					}
