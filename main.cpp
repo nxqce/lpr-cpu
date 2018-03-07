@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
 						}
 					}
 
-					if (black > 0 && white / black >= 2 && plateTempImg.rows > 200)
+					if (black > 0 && white / black >= 2 && plateTempImg.rows > 20)
 						plateImg = plateTempImg;
 				}
 			}
@@ -149,8 +149,9 @@ int main(int argc, char** argv) {
 	//threshold(plateGrayImg, plateBinImg, 120, 255, CV_THRESH_BINARY);
 	resize(plateImg, plateImg, Size(270, 200));
 	Mat plateBlurImg, plateEdgeImg, plateBinImg, plateGrayImg, plateContourImg;
-	//GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
-	//Canny(plateImg, plateEdgeImg, 50, 300, 3) ;
+
+	GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
+	Canny(plateImg, plateEdgeImg, 50, 300, 3) ;
 	//Mat morpho;
 	Mat element = getStructuringElement(MORPH_ELLIPSE, Size(3, 3), Point(1, 1));
 	//erode(plateImg, morpho, element, Point(-1, -1), 3);
@@ -159,17 +160,24 @@ int main(int argc, char** argv) {
 	//threshold(morpho, morpho, 110, 255, CV_THRESH_BINARY);
 	
 	cvtColor(plateImg, plateGrayImg, CV_BGR2GRAY);
-	threshold(plateGrayImg, plateBinImg, 160, 255, CV_THRESH_BINARY);
-	dilate(plateBinImg, plateBinImg, element);
+	threshold(plateGrayImg, plateBinImg, 110, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
+	//adaptiveThreshold(plateGrayImg, plateBinImg, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 9, 1);
+	
+	//dilate(plateBinImg, plateBinImg, element, Point(-1,-1), 2);
+	erode(plateBinImg, plateBinImg, element);
+
 	plateContourImg = plateBinImg.clone();
 	imshow("Bin", plateBinImg);
+
+	dilate(plateBinImg, plateBinImg, element, Point(-1,-1), 2);
 
 	vector < vector<Point> > contours;
 	findContours(plateContourImg, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
 	Mat charImg[9];
 	int index = 0;
-	/// Approximate contours to polygons + get bounding rects and circles
+
+	/// Approximate contours to polygons and get bounding rects
 	vector<vector<Point> > contours_poly( contours.size() );
 	vector<Rect> boundRect( contours.size() );
 
@@ -198,14 +206,15 @@ int main(int argc, char** argv) {
 	int im = index - 1;
 	while (im >= 0) {
 	// int im = 8;
-		// cout << charImg[im].cols << " : " << charImg[im].rows << endl;
-		line(charImg[im], Point(charImg[im].cols/3, 0), Point(charImg[im].cols/3, charImg[im].rows), Scalar(255, 255, 255), 1, CV_AA);
-		line(charImg[im], Point(charImg[im].cols/3*2, 0), Point(charImg[im].cols/3*2, charImg[im].rows), Scalar(255, 255, 255), 1, CV_AA);
-		line(charImg[im], Point(0, charImg[im].rows/6), Point(charImg[im].cols, charImg[im].rows/6), Scalar(255, 255, 255), 1, CV_AA);
-		line(charImg[im], Point(0, charImg[im].rows/6*2), Point(charImg[im].cols, charImg[im].rows/6*2), Scalar(255, 255, 255), 1, CV_AA);
-		line(charImg[im], Point(0, charImg[im].rows/6*3), Point(charImg[im].cols, charImg[im].rows/6*3), Scalar(255, 255, 255), 1, CV_AA);
-		line(charImg[im], Point(0, charImg[im].rows/6*4), Point(charImg[im].cols, charImg[im].rows/6*4), Scalar(255, 255, 255), 1, CV_AA);
-		line(charImg[im], Point(0, charImg[im].rows/6*5), Point(charImg[im].cols, charImg[im].rows/6*5), Scalar(255, 255, 255), 1, CV_AA);
+		//cout << charImg[im].cols << " : " << charImg[im].rows << endl;
+		// Scalar color = Scalar(255,255,255);
+		// line(charImg[im], Point(charImg[im].cols/3, 0), Point(charImg[im].cols/3, charImg[im].rows), color, 1, CV_AA);
+		// line(charImg[im], Point(charImg[im].cols/3*2, 0), Point(charImg[im].cols/3*2, charImg[im].rows), color, 1, CV_AA);
+		// line(charImg[im], Point(0, charImg[im].rows/6), Point(charImg[im].cols, charImg[im].rows/6), color, 1, CV_AA);
+		// line(charImg[im], Point(0, charImg[im].rows/6*2), Point(charImg[im].cols, charImg[im].rows/6*2), color, 1, CV_AA);
+		// line(charImg[im], Point(0, charImg[im].rows/6*3), Point(charImg[im].cols, charImg[im].rows/6*3), color, 1, CV_AA);
+		// line(charImg[im], Point(0, charImg[im].rows/6*4), Point(charImg[im].cols, charImg[im].rows/6*4), color, 1, CV_AA);
+		// line(charImg[im], Point(0, charImg[im].rows/6*5), Point(charImg[im].cols, charImg[im].rows/6*5), color, 1, CV_AA);
 		imshow("num " + char(im), charImg[im]);
 
 		int charSquare[3][6] = {{0}};
@@ -229,10 +238,10 @@ int main(int argc, char** argv) {
 				// cout << "black: " << black << " - white: " << white << endl;
 				// cout << "---------------------------------" << endl;
 				if (black > white / 4) {
+				//if (white > 0){
 					charSquare[c][l] = 1;
 					charBit += pow(2,l*3 + c);
 				}
-				//charBit += charSquare[r][l]*pow(2,l*3 + r);
 			}
 		}
 
@@ -281,6 +290,7 @@ double ySolve(double a1, double b1, double c1, double a2, double b2, double c2) 
 int dec2bin(int num){
 	int total = 0;
 	int count = 0;
+	cout << endl;
 	while(num > 0)
 	{  
 		total = num % 2;  
@@ -303,10 +313,10 @@ char getChar(int code){
 		two 	= 234786,
 		three 	= 84258,
 		four	= 160338,
-		five	= 116943,
+		five	= 84175, //116943,
 		six		= 88778,
 		seven	= 38023,
-		eight	= 86186, //43050,
+		eight	= 88746, //86186, //43050,
 		nine	= 85354;
 
 	//compare the code with the minimun code
@@ -314,11 +324,12 @@ char getChar(int code){
 	if ((int)(code & eight) == eight) return '8';
 	else if ((int)(code & zero) == zero) return '0';
 
-	else if ((int)(code & two) == two) return '2';
-
 	//9 is close to 3
 	else if ((int)(code & nine) == nine) return '9';
 	else if ((int)(code & three) == three) return '3';
+	
+	//3 is close to 2
+	else if ((int)(code & two) == two) return '2';
 
 	else if ((int)(code & four) == four) return '4';
 	
