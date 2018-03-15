@@ -150,8 +150,8 @@ int main(int argc, char** argv) {
 	resize(plateImg, plateImg, Size(270, 200));
 	Mat plateBlurImg, plateEdgeImg, plateBinImg, plateGrayImg, plateContourImg;
 
-	GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
-	Canny(plateImg, plateEdgeImg, 50, 300, 3) ;
+	//GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
+	//Canny(plateImg, plateEdgeImg, 50, 300, 3) ;
 	//Mat morpho;
 	Mat element = getStructuringElement(MORPH_ELLIPSE, Size(3, 3), Point(1, 1));
 	//erode(plateImg, morpho, element, Point(-1, -1), 3);
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
 	//threshold(morpho, morpho, 110, 255, CV_THRESH_BINARY);
 	
 	cvtColor(plateImg, plateGrayImg, CV_BGR2GRAY);
-	threshold(plateGrayImg, plateBinImg, 110, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
+	threshold(plateGrayImg, plateBinImg, 80, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
 	//adaptiveThreshold(plateGrayImg, plateBinImg, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 9, 1);
 	
 	//dilate(plateBinImg, plateBinImg, element, Point(-1,-1), 2);
@@ -175,6 +175,7 @@ int main(int argc, char** argv) {
 	findContours(plateContourImg, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
 	Mat charImg[9];
+	Point2i topLeft[9];
 	int index = 0;
 
 	/// Approximate contours to polygons and get bounding rects
@@ -190,14 +191,51 @@ int main(int argc, char** argv) {
 	// GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
 	// Canny(plateBlurImg, plateEdgeImg, 50, 300, 3);
 
-	for( int i = 0; i< contours.size(); i++ ) {
+	for(int i = 0; i< contours.size(); i++) {
 		Rect r = boundRect[i];
-		if ((r.width / (double)r.height > 0.2f && r.width / (double)r.height < 0.5f)
+		if ((r.width / (double)r.height > 0.2f && r.width / (double)r.height < 0.6f)
 			&& (r.height < 100 && r.height > 70)){
-			
+			topLeft[index] = r.tl();
 			rectangle( plateImg, r, Scalar(0, 0, 255), 1, 8, 0 );
 			charImg[index] = plateBinImg(r);
 			index++;
+		}
+	}
+
+	//Sort the charImg array
+	int top = 0;
+	for (int i = 0; i < index; i++){
+		if (topLeft[i].y < 50){
+			top = i;
+			break;
+		}
+	}
+
+	for (int i = 0; i < top - 1; i++){
+		for (int j = i; j < top; j++){
+			if (topLeft[i].x < topLeft[j].x){
+				Point2i tempPoint = topLeft[i];
+				topLeft[i] = topLeft[j];
+				topLeft[j] = tempPoint;
+
+				Mat tempImg = charImg[i];
+				charImg[i] = charImg[j];
+				charImg[j] = tempImg;
+			}
+		}
+	}
+
+	for (int i = top; i < index - 1; i++){
+		for (int j = i; j < index; j++){
+			if (topLeft[i].x < topLeft[j].x){
+				Point2i tempPoint = topLeft[i];
+				topLeft[i] = topLeft[j];
+				topLeft[j] = tempPoint;
+
+				Mat tempImg = charImg[i];
+				charImg[i] = charImg[j];
+				charImg[j] = tempImg;
+			}
 		}
 	}
 
@@ -311,7 +349,7 @@ char getChar(int code){
 	//define minimun code of number
 	int zero	= 88938,
 		two 	= 234786,
-		three 	= 84258,
+		three 	= 84386, //84258,
 		four	= 160338,
 		five	= 84175, //116943,
 		six		= 88778,
@@ -320,13 +358,12 @@ char getChar(int code){
 		nine	= 85354;
 
 	//compare the code with the minimun code
-	//8 is close to 0
+	//8 9 3 0 are close to each other
 	if ((int)(code & eight) == eight) return '8';
-	else if ((int)(code & zero) == zero) return '0';
-
-	//9 is close to 3
-	else if ((int)(code & nine) == nine) return '9';
 	else if ((int)(code & three) == three) return '3';
+
+	else if ((int)(code & nine) == nine) return '9';
+	else if ((int)(code & zero) == zero) return '0';
 	
 	//3 is close to 2
 	else if ((int)(code & two) == two) return '2';
