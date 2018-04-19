@@ -53,32 +53,32 @@ int main() {
 		if (vHis[i] > max) max = vHis[i];
 		sum += vHis[i];
 	}
-	int avgMM = (max + min) / 2;
-	int avgS = sum / 640;
+	int vAvgMM = (max + min) / 2;
+	int vAvgS = sum / 640;
 
-	int hmin = 640;
-	int hmax = 0;
-	int hsum = 0;
+	int hMin = 640;
+	int hMax = 0;
+	int hSum = 0;
 	for (int i = 0; i < 480; i++) {
-		if (hHis[i] < hmin) hmin = hHis[i];
-		if (hHis[i] > hmax) hmax = hHis[i];
-		hsum += hHis[i];
+		if (hHis[i] < hMin) hMin = hHis[i];
+		if (hHis[i] > hMax) hMax = hHis[i];
+		hSum += hHis[i];
 	}
-	int havgMM = (max + min) / 2;
-	int havgS = sum / 480;
+	int hAvgMM = (max + min) / 2;
+	int hAvgS = sum / 480;
 
 
 	//ve duong thang
 	for (int i = 0; i < 640; i++) {
-		if (vHis[i] >= avgMM) {
-			if(i > 0 && i < 639 && (vHis[i - 1] < avgMM || vHis[i + 1] < avgMM))
+		if (vHis[i] >= vAvgMM) {
+			if(i > 0 && i < 639 && (vHis[i - 1] < vAvgMM || vHis[i + 1] < vAvgMM))
 				line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
 		}
 	}
 
 	for (int i = 0; i < 480; i++) {
-		if (hHis[i] >= havgMM) {
-			if (i > 0 && i < 479 && (vHis[i - 1] < avgMM || vHis[i + 1] < avgMM))
+		if (hHis[i] >= hAvgMM) {
+			if (i > 0 && i < 479 && (hHis[i - 1] < hAvgMM || hHis[i + 1] < hAvgMM))
 				line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
 		}
 	}
@@ -94,15 +94,15 @@ int main() {
 	}
 
 	//duong trung binh
-	line(vhHisImg, Point(0, 480 - avgMM), Point(639, 480 - avgMM), Scalar(0, 255, 0), 1);
-	line(vhHisImg, Point(0, 480 - avgS), Point(639, 480 - avgS), Scalar(0, 0, 255), 1);
+	line(vhHisImg, Point(0, 480 - vAvgMM), Point(639, 480 - vAvgMM), Scalar(0, 255, 0), 1);
+	line(vhHisImg, Point(0, 480 - vAvgS), Point(639, 480 - vAvgS), Scalar(0, 0, 255), 1);
 
-	line(vhHisImg, Point(havgMM, 0), Point(havgMM, 480), Scalar(0, 255, 0), 1);
-	line(vhHisImg, Point(havgS, 0), Point(havgS, 480), Scalar(0, 0, 255), 1);
+	line(vhHisImg, Point(hAvgMM, 0), Point(hAvgMM, 480), Scalar(0, 255, 0), 1);
+	line(vhHisImg, Point(hAvgS, 0), Point(hAvgS, 480), Scalar(0, 0, 255), 1);
 
 
 	imshow("Origin", input);
-	imshow("Vertical Histigram", vhHisImg);
+	imshow("Direction Histogram", vhHisImg);
 
 	waitKey(0);
 	return 0;
