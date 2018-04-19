@@ -2,6 +2,7 @@ int main() {
 	Mat input;
 	String filename;
 	cin >> filename;
+	filename += ".jpg";
 	input = imread(filename);
 	if (!input.data) {
 		return 1;
@@ -47,16 +48,16 @@ int main() {
 	Mat vhHisImg(480, 640, CV_8UC3, Scalar(0, 0, 0));
 	cvtColor(edgeImg, vhHisImg, CV_GRAY2BGR);
 
-	int min = 480;
-	int max = 0;
-	int sum = 0;
+	int vMin = 480;
+	int vMax = 0;
+	int vSum = 0;
 	for (int i = 0; i < 640; i++) {
-		if (vHis[i] < min) min = vHis[i];
-		if (vHis[i] > max) max = vHis[i];
-		sum += vHis[i];
+		if (vHis[i] < vMin) vMin = vHis[i];
+		if (vHis[i] > vMax) vMax = vHis[i];
+		vSum += vHis[i];
 	}
-	int vAvgMM = (max + min) / 2;
-	int vAvgS = sum / 640;
+	int vAvgMM = (vMax + vMin) / 2;
+	int vAvgS = vSum / 640;
 
 	int hMin = 640;
 	int hMax = 0;
@@ -66,8 +67,8 @@ int main() {
 		if (hHis[i] > hMax) hMax = hHis[i];
 		hSum += hHis[i];
 	}
-	int hAvgMM = (max + min) / 2;
-	int hAvgS = sum / 480;
+	int hAvgMM = (hMax + hMin) / 2;
+	int hAvgS = hSum / 480;
 
 
 	//ve duong thang
@@ -87,10 +88,42 @@ int main() {
 			count = 0;
 		}
 	}
+	count = 0;
+	start = 0;
+	for (int i = 639; i >= 0; i--) {
+		if (vHis[i] >= vAvgMM) {
+			//if(i > 0 && i < 639 && (vHis[i - 1] < vAvgMM || vHis[i + 1] < vAvgMM))
+			if (count == 0) line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
+			start = 1;
+		}
+		if (start == 1) {
+			count++;
+			if (count > countMax) start = 0;
+		}
+		else {
+			count = 0;
+		}
+	}
 
 	count = 0;
 	start = 0;
 	for (int i = 0; i < 480; i++) {
+		if (hHis[i] >= hAvgMM) {
+			//if (i > 0 && i < 479 && (hHis[i - 1] < hAvgMM || hHis[i + 1] < hAvgMM))
+			if (count == 0) line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
+			start = 1;
+		}
+		if (start == 1) {
+			count++;
+			if (count > countMax) start = 0;
+		}
+		else {
+			count = 0;
+		}
+	}
+	count = 0;
+	start = 0;
+	for (int i = 479; i >= 0; i--) {
 		if (hHis[i] >= hAvgMM) {
 			//if (i > 0 && i < 479 && (hHis[i - 1] < hAvgMM || hHis[i + 1] < hAvgMM))
 			if (count == 0) line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
