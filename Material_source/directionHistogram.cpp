@@ -1,6 +1,8 @@
 int main() {
 	Mat input;
-	input = imread("input3.jpg");
+	String filename;
+	cin >> filename;
+	input = imread(filename);
 	if (!input.data) {
 		return 1;
 	}
@@ -69,17 +71,37 @@ int main() {
 
 
 	//ve duong thang
+	int count = 0, start = 0;
+	int countMax = 20;
 	for (int i = 0; i < 640; i++) {
 		if (vHis[i] >= vAvgMM) {
-			if(i > 0 && i < 639 && (vHis[i - 1] < vAvgMM || vHis[i + 1] < vAvgMM))
-				line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
+			//if(i > 0 && i < 639 && (vHis[i - 1] < vAvgMM || vHis[i + 1] < vAvgMM))
+			if(count == 0) line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
+			start = 1;
+		}
+		if (start == 1) {
+			count++;
+			if (count > countMax) start = 0;
+		}
+		else {
+			count = 0;
 		}
 	}
 
+	count = 0;
+	start = 0;
 	for (int i = 0; i < 480; i++) {
 		if (hHis[i] >= hAvgMM) {
-			if (i > 0 && i < 479 && (hHis[i - 1] < hAvgMM || hHis[i + 1] < hAvgMM))
-				line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
+			//if (i > 0 && i < 479 && (hHis[i - 1] < hAvgMM || hHis[i + 1] < hAvgMM))
+			if (count == 0) line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
+			start = 1;
+		}
+		if (start == 1) {
+			count++;
+			if (count > countMax) start = 0;
+		}
+		else {
+			count = 0;
 		}
 	}
 
