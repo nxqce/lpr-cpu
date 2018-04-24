@@ -3,9 +3,9 @@ int main() {
 	VideoCapture cap(0); // open the default camera
 	if (!cap.isOpened())  // check if we succeeded
 		return -1;
+	//cap.set(CV_CAP_PROP_FPS, 15);
 
-	Mat edges;
-	Mat vhHisImg(480, 640, CV_8UC3, Scalar(0, 0, 0));
+	//Mat vhHisImg(480, 640, CV_8UC3, Scalar(0, 0, 0));
 	namedWindow("Direction Histogram", 1);
 	for (;;)
 	{
@@ -42,41 +42,49 @@ int main() {
 
 
 		//----------Hough transform-------------
-		vector<Vec4i> linesA, linesB;
-		HoughLinesP(edgeImg, linesA, 1, CV_PI / 180, 70, 30, 50);
-		HoughLinesP(edgeImg, linesB, 1, CV_PI / 180, 30, 50, 50);
+		//vector<Vec4i> linesA, linesB;
+
+		CvMemStorage* linesAMem = cvCreateMemStorage(0);
+		CvMemStorage* linesBMem = cvCreateMemStorage(0);
+
+		IplImage edge = edgeImg;
+
+		//HoughLinesP(edgeImg, linesA, 1, CV_PI / 180, 70, 30, 50);
+		CvSeq* linesA = cvHoughLines2(&edge, linesAMem, CV_HOUGH_PROBABILISTIC, 1, CV_PI / 180, 70, 30, 50);
+		//HoughLinesP(edgeImg, linesB, 1, CV_PI / 180, 30, 50, 50);
+		CvSeq* linesB = cvHoughLines2(&edge, linesBMem, CV_HOUGH_PROBABILISTIC, 1, CV_PI / 180, 30, 50, 50);
 
 		//----------Draw lines------------------
 		Mat lineImg(input.size(), CV_8UC1, Scalar(0));
 		int stretch = 0; //Number of pixel to stretch lines
 		double tanV = 8;
 		double tanH = 0.08;
-		for (size_t i = 0; i < linesA.size(); i++) {
-			Vec4i l = linesA[i];
-			float w = abs(l[1] - l[3]);
-			float h = abs(l[0] - l[2]);
-			float tan = w / h;
+		for (size_t i = 0; i < linesA->total; i++) {
+			Point* l = (Point*)cvGetSeqElem(linesA, i);
+			float w = abs(l[0].x - l[1].x);
+			float h = abs(l[0].y - l[1].y);
+			float tan = h / w;
 			if (tan < 0.08) {
-				line(lineImg, Point(l[0] - stretch, l[1]), Point(l[2] + stretch, l[3]), Scalar(255), 1, CV_AA);
+				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
 			}
 			if (tan > tanV) {
-				line(lineImg, Point(l[0], l[1] - stretch), Point(l[2], l[3] + stretch), Scalar(255), 1, CV_AA);
+				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
 			}
 		}
-		for (size_t i = 0; i < linesB.size(); i++) {
-			Vec4i l = linesB[i];
-			float w = abs(l[1] - l[3]);
-			float h = abs(l[0] - l[2]);
-			float tan = w / h;
+		for (size_t i = 0; i < linesB->total; i++) {
+			Point* l = (Point*)cvGetSeqElem(linesB, i);
+			float w = abs(l[0].x - l[1].x);
+			float h = abs(l[0].y - l[1].y);
+			float tan = h / w;
 			if (tan < 0.08) {
-				line(lineImg, Point(l[0] - stretch, l[1]), Point(l[2] + stretch, l[3]), Scalar(255), 1, CV_AA);
+				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
 			}
 			if (tan > tanV) {
-				line(lineImg, Point(l[0], l[1] - stretch), Point(l[2], l[3] + stretch), Scalar(255), 1, CV_AA);
+				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
 			}
 		}
 
-		//imshow("Line", lineImg);
+		imshow("Line", lineImg);
 
 		int vHis[640] = { 0 };
 		int hHis[480] = { 0 };
@@ -98,7 +106,7 @@ int main() {
 		}
 
 		//Ve histogram len anh bien
-		vhHisImg = Mat(480, 640, CV_8UC3, Scalar(0, 0, 0));
+		Mat vhHisImg(480, 640, CV_8UC3, Scalar(0, 0, 0));
 		cvtColor(edgeImg, vhHisImg, CV_GRAY2BGR);
 
 		//Tim nguong trung binh phuong doc
@@ -254,13 +262,6 @@ int main() {
 						yTl = find(hLines.begin(), hLines.end(), iPoints[i][1]) - hLines.begin();
 						yBr = find(hLines.begin(), hLines.end(), iPoints[j][1]) - hLines.begin();
 						int iSum = abs(xBr - xTl) + abs(yBr - yTl);
-						//cout << iSum << endl;
-						/*double iAvg = iSum / (abs(iPoints[i][0] - iPoints[j][0]) + abs(iPoints[i][1] - iPoints[j][1]));
-						if (iSum > iMax) {
-						selectedP1 = Point(iPoints[i]);
-						selectedP2 = Point(iPoints[j]);
-						iMax = iSum;
-						}*/
 
 						int iVSum = 0;
 
@@ -277,25 +278,6 @@ int main() {
 
 						double iAvg = (double)((iVSum / (double)(xEnd - xStart)) + (iHSum / (double)(yEnd - yStart)));
 
-						//double iAvg = (iSum / (xEnd - xStart + yEnd - yStart));
-
-						/*int black = 0, white = 0;
-
-						for (int m = yStart; m <= yEnd; m++) {
-						for (int n = xStart; n <= xEnd; n++) {
-						if ((int)binImg.at<uchar>(Point(m, n)) == 0) black++;
-						else white++;
-						}
-						}
-
-						if (black > 0 && 2*black <= white) {
-						if (iAvg > iMax) {
-						cout << black << " " << white << endl;
-						selectedP1 = Point(iPoints[i]);
-						selectedP2 = Point(iPoints[j]);
-						iMax = iAvg;
-						}
-						}*/
 
 						if (iAvg > iMax) {
 							selectedP1 = Point(iPoints[i]);
@@ -328,9 +310,13 @@ int main() {
 
 		//imshow("Origin", input);
 		imshow("Direction Histogram", vhHisImg);
-
-
+		
 		if (waitKey(30) >= 0) break;
+		//cout << linesA.size() << " " << linesB.size() << endl;
+		//cout << linesA.max_size() << " " << linesB.max_size() << endl;
+		//vector<Vec4i>().swap(linesA);
+		//vector<Vec4i>().swap(linesB);
+		
 	}
 	// the camera will be deinitialized automatically in VideoCapture destructor
 	return 0;
