@@ -53,7 +53,7 @@ String checkCorner(Mat input) {
 			break;
 		case 3:
 			corDetect = bl.clone();
-			break;
+			break; 
 		}
 		for (int i = 0; i < corDetect.cols; i++) {
 			for (int j = 0; j < corDetect.rows; j++) {
