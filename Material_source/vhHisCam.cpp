@@ -1,3 +1,298 @@
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace std;
+using namespace cv;
+
+double xSolve(double a1, double b1, double c1, double a2, double b2, double c2);
+double ySolve(double a1, double b1, double c1, double a2, double b2, double c2);
+int dec2bin(int num);
+char getChar(int code);
+Vec3d linearEquation(double x1, double y1, double x2, double y2);
+Vec2d interPoint(double a1, double b1, double c1, double a2, double b2, double c2);
+
+double xSolve(double a1, double b1, double c1, double a2, double b2, double c2) {
+	double d = a1*b2 - a2*b1;
+	double dx = c1*b2 - c2*b1;
+	double dy = c2*a1 - c1*a2;
+	if (dx == 0 || dy == 0) return -1;
+	return dx / d;
+}
+
+double ySolve(double a1, double b1, double c1, double a2, double b2, double c2) {
+	double d = a1*b2 - a2*b1;
+	double dx = c1*b2 - c2*b1;
+	double dy = c2*a1 - c1*a2;
+	if (dx == 0 || dy == 0) return -1;
+	return dy / d;
+}
+
+Vec2d interPoint(double a1, double b1, double c1, double a2, double b2, double c2) {
+	double x, y;
+
+	//(a2 - a1)x + (b2 - b1)y = c1 - c2
+	// TH1:
+	if ((a2 == a1) && (b2 != b1)) {
+		y = (c1 - c2) / (b2 - b1);
+		x = (-c1 - b1*y) / a1;
+	}
+	// TH2:
+	else if ((a2 != a1) && (b2 == b1)) {
+		x = (c1 - c2) / (a2 - a1);
+		y = (-c1 - a1*x) / b1;
+	}
+	// TH3:
+	else if ((a2 != a1) && (b2 != b1)) {
+		y = (a1*c2 - a2*c1) / (a2*b1 - a1*b2);
+		x = (-c1 - b1*y) / a1;
+	}
+	else {
+		cout << a1 << " " << b1 << " " << c1 << endl;
+		cout << a2 << " " << b2 << " " << c2 << endl;
+	}
+
+	Vec2d result = { x, y };
+	return result;
+}
+
+Vec3d linearEquation(double x1, double y1, double x2, double y2) {
+	double a, b, c;
+
+	if ((x1 == x2) && (y1 != y2)) {
+		a = 1;
+		b = 0;
+		c = -x1;
+	}
+	else if ((x1 != x2) && (y1 == y2)) {
+		a = 0;
+		b = 1;
+		c = -y1;
+	}
+	else if ((x1 != x2) && (y1 != y2)) {
+		double T = (y1 - y2) / (x1 - x2);
+		double H = y1 - T*x1;
+		a = (-1)*T;
+		b = 1;
+		c = -(1)*(H);
+	}
+
+	Vec3d result = { a, b, c };
+	return result;
+}
+
+int dec2bin(int num) {
+	int total = 0;
+	int count = 0;
+	cout << endl;
+	while (num > 0)
+	{
+		total = num % 2;
+		num /= 2;
+		if (total == 1)
+			cout << total << " ";
+		else
+			cout << "  ";
+		if (count % 3 == 2)
+			cout << endl;
+		count++;
+	}
+	cout << endl;
+	return 0;
+}
+
+char getChar(int code) {
+	//define minimun code of number
+	int zero = 88938,
+		two = 234786,
+		three = 84386, //84258,
+		four = 160338,
+		five = 84175, //116943,
+		six = 88778,
+		seven = 38023,
+		eight = 88746, //86186, //43050,
+		nine = 85354;
+
+	//compare the code with the minimun code
+	//8 9 3 0 are close to each other
+	if ((int)(code & eight) == eight) return '8';
+	else if ((int)(code & three) == three) return '3';
+
+	else if ((int)(code & nine) == nine) return '9';
+	else if ((int)(code & zero) == zero) return '0';
+
+	//3 is close to 2
+	else if ((int)(code & two) == two) return '2';
+
+	else if ((int)(code & four) == four) return '4';
+
+	//6 is close to 5
+	else if ((int)(code & six) == six) return '6';
+	else if ((int)(code & five) == five) return '5';
+
+	else if ((int)(code & seven) == seven) return '7';
+
+	else return ' ';
+}
+
+void findCharacter(Mat input, Mat *charImg, int &index, Point2i *topLeft) {
+	cout << "Debug: findCharacter()" << endl;
+	//----------Extract characters------------
+	Mat plateImg = input;
+	resize(plateImg, plateImg, Size(640, 480)); //270;200
+	//resize(plateImg, plateImg, Size(270, 200));
+	//imshow("Plate", plateImg);
+
+	Mat plateBlurImg, plateEdgeImg, plateBinImg, plateGrayImg, plateContourImg;
+
+	Mat element = getStructuringElement(MORPH_ELLIPSE, Size(3, 3), Point(1, 1));
+
+	cvtColor(plateImg, plateGrayImg, CV_BGR2GRAY);
+	threshold(plateGrayImg, plateBinImg, 80, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);
+	//adaptiveThreshold(plateGrayImg, plateBinImg, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 9, 1);
+
+	//dilate(plateBinImg, plateBinImg, element, Point(-1,-1), 2);
+	erode(plateBinImg, plateBinImg, element);
+
+	plateContourImg = plateBinImg.clone();
+	//imshow("Bin", plateBinImg);
+
+	dilate(plateBinImg, plateBinImg, element, Point(-1, -1), 2);
+
+	//vector < vector<Point> > contours;
+	//findContours(plateEdgeImg, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+
+	CvMemStorage *contoursMem = cvCreateMemStorage(0);
+	CvSeq *contours = 0;
+	IplImage plate = plateContourImg;
+
+	int n = cvFindContours(&plate, contoursMem, &contours, sizeof(CvContour), CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
+
+	//Mat charImgArray[9];
+	//Mat * charImg = charImgArray;
+	//Point2i topLeft[9];
+	//int index = 0;
+
+	/// Approximate contours to polygons and get bounding rects
+	vector<vector<Point> > contours_poly(n);
+	vector<CvRect> boundRect(n);
+
+	CvMemStorage *polyMem = cvCreateMemStorage(0);
+	CvSeq *poly;
+
+	poly = cvApproxPoly(contours, sizeof(CvContour), polyMem, CV_POLY_APPROX_DP, 3, 1);
+	int totalPoly = 0;
+	for (CvSeq *i = poly; i != NULL; i = i->h_next) {
+		boundRect[totalPoly] = cvBoundingRect((CvContour*)i, 1);
+		totalPoly++;
+	}
+
+	/// Draw bonding rects
+	// GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
+	// Canny(plateBlurImg, plateEdgeImg, 50, 300, 3);
+
+	for (int i = 0; i < totalPoly; i++) {
+		if (index > 9) break;
+		Rect r = boundRect[i];
+		double rate = r.width / (double)r.height;
+		if (( rate > 0.2f && rate < 0.6f) && (r.height < 240 && r.height > 140)) {
+			topLeft[index] = r.tl();
+			rectangle(plateImg, r, Scalar(0, 0, 255), 1, 8, 0);
+			*(charImg + index) = plateBinImg(r);
+			index++;
+		}
+	}
+	//imshow("plateBin", plateBinImg);
+	if (index > 7 && index < 10) imshow("plate", plateImg);
+	//waitKey(0);
+	return;
+}
+
+void sortPlate(Mat *charImg, Point2i *topLeft, int index){
+	//Sort the charImg array
+	int top = 0;
+	for (int i = 0; i < index; i++) {
+		if (topLeft[i].y < 50) {
+			top = i;
+			break;
+		}
+	}
+
+	for (int i = 0; i < top - 1; i++) {
+		for (int j = i; j < top; j++) {
+			if (topLeft[i].x < topLeft[j].x) {
+				Point2i tempPoint = topLeft[i];
+				topLeft[i] = topLeft[j];
+				topLeft[j] = tempPoint;
+
+				Mat tempImg = charImg[i];
+				charImg[i] = charImg[j];
+				charImg[j] = tempImg;
+			}
+		}
+	}
+
+	for (int i = top; i < index - 1; i++) {
+		for (int j = i; j < index; j++) {
+			if (topLeft[i].x < topLeft[j].x) {
+				Point2i tempPoint = topLeft[i];
+				topLeft[i] = topLeft[j];
+				topLeft[j] = tempPoint;
+
+				Mat tempImg = charImg[i];
+				charImg[i] = charImg[j];
+				charImg[j] = tempImg;
+			}
+		}
+	}
+
+	return;
+}
+
+char detectNumber(Mat * charImg, int im) {
+	int charSquare[3][6] = { { 0 } };
+	int charBit = 0;
+	char regChar = '-';
+
+	int black = 0, white = 0;
+	for (int l = 0; l < 6; l++) {
+		for (int c = 0; c < 3; c++) {
+			white = 0;
+			black = 0;
+			for (int i = 0 + c*charImg[im].cols / 3; i < (c + 1)*charImg[im].cols / 3; i++) {
+				for (int j = 0 + l*charImg[im].rows / 6; j < (l + 1)*charImg[im].rows / 6; j++) {
+					//cout << (int)charImg[0].at<uchar>(Point(i, j)) << " ";
+					if ((int)charImg[im].at<uchar>(Point(i, j)) == 0) black++;
+					else white++;
+				}
+				//cout << endl;
+			}
+			// cout << "[" << l << "," << c << "]" << endl;
+			// cout << "black: " << black << " - white: " << white << endl;
+			// cout << "---------------------------------" << endl;
+			if (black > white / 4) {
+				//if (white > 0){
+				charSquare[c][l] = 1;
+				charBit += pow(2, l * 3 + c);
+			}
+		}
+	}
+
+	if (charImg[im].cols < 30) {
+		regChar = '1';
+	}
+	else {
+		regChar = getChar(charBit);
+	}
+
+	return regChar;
+}
+
+
 int main() {
 
 	VideoCapture cap(0); // open the default camera
@@ -24,7 +319,7 @@ int main() {
 		cvtColor(input, grayImg, CV_BGR2GRAY);
 		
 		//----------Edge dectect by Canny------
-		int lowThreshold = 70;
+		int lowThreshold = 50;
 		int const max_lowThreshold = 100;
 		int ratio = 3;
 		int kernel_size = 3;
@@ -57,34 +352,34 @@ int main() {
 		//----------Draw lines------------------
 		Mat lineImg(input.size(), CV_8UC1, Scalar(0));
 		int stretch = 0; //Number of pixel to stretch lines
-		double tanV = 8;
+		double tanV = 11;
 		double tanH = 0.08;
 		for (size_t i = 0; i < linesA->total; i++) {
 			Point* l = (Point*)cvGetSeqElem(linesA, i);
 			float w = abs(l[0].x - l[1].x);
 			float h = abs(l[0].y - l[1].y);
 			float tan = h / w;
-			if (tan < 0.08) {
+			if (tan < tanH) {
 				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
 			}
 			if (tan > tanV) {
 				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
 			}
 		}
-		for (size_t i = 0; i < linesB->total; i++) {
-			Point* l = (Point*)cvGetSeqElem(linesB, i);
-			float w = abs(l[0].x - l[1].x);
-			float h = abs(l[0].y - l[1].y);
-			float tan = h / w;
-			if (tan < 0.08) {
-				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
-			}
-			if (tan > tanV) {
-				line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
-			}
-		}
+		//for (size_t i = 0; i < linesB->total; i++) {
+		//	Point* l = (Point*)cvGetSeqElem(linesB, i);
+		//	float w = abs(l[0].x - l[1].x);
+		//	float h = abs(l[0].y - l[1].y);
+		//	float tan = h / w;
+		//	if (tan < tanH) {
+		//		line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
+		//	}
+		//	if (tan > tanV) {
+		//		line(lineImg, l[0], l[1], Scalar(255), 1, CV_AA);
+		//	}
+		//}
 
-		imshow("Line", lineImg);
+		//imshow("Line", lineImg);
 
 		int vHis[640] = { 0 };
 		int hHis[480] = { 0 };
@@ -145,7 +440,7 @@ int main() {
 			if (vHis[i] >= vAvg) {
 				//if(i > 0 && i < 639 && (vHis[i - 1] < vAvgMM || vHis[i + 1] < vAvgMM))
 				if (count == 0) {
-					line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
+					//line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
 					vLines.push_back(i);
 				}
 				start = 1;
@@ -164,7 +459,7 @@ int main() {
 			if (vHis[i] >= vAvg) {
 				//if(i > 0 && i < 639 && (vHis[i - 1] < vAvgMM || vHis[i + 1] < vAvgMM))
 				if (count == 0) {
-					line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
+					//line(vhHisImg, Point(i, 0), Point(i, 480), Scalar(0, 255, 255), 1);
 					vLines.push_back(i);
 				}
 				start = 1;
@@ -184,7 +479,7 @@ int main() {
 			if (hHis[i] >= hAvg) {
 				//if (i > 0 && i < 479 && (hHis[i - 1] < hAvgMM || hHis[i + 1] < hAvgMM))
 				if (count == 0) {
-					line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
+					//line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
 					hLines.push_back(i);
 				}
 				start = 1;
@@ -203,7 +498,7 @@ int main() {
 			if (hHis[i] >= hAvg) {
 				//if (i > 0 && i < 479 && (hHis[i - 1] < hAvgMM || hHis[i + 1] < hAvgMM))
 				if (count == 0) {
-					line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
+					//line(vhHisImg, Point(0, i), Point(640, i), Scalar(255, 0, 0), 1);
 					hLines.push_back(i);
 				}
 				start = 1;
@@ -301,16 +596,126 @@ int main() {
 
 
 
-		line(vhHisImg, Point(vP1.x, 0), Point(vP1.x, 479), Scalar(255, 0, 255), 2);
-		line(vhHisImg, Point(vP2.x, 0), Point(vP2.x, 479), Scalar(255, 0, 255), 2);
-		line(vhHisImg, Point(0, hP1.y), Point(639, hP1.y), Scalar(255, 0, 255), 2);
-		line(vhHisImg, Point(0, hP2.y), Point(639, hP2.y), Scalar(255, 0, 255), 2);
+		//line(vhHisImg, Point(vP1.x, 0), Point(vP1.x, 479), Scalar(255, 0, 255), 2);
+		//line(vhHisImg, Point(vP2.x, 0), Point(vP2.x, 479), Scalar(255, 0, 255), 2);
+		//line(vhHisImg, Point(0, hP1.y), Point(639, hP1.y), Scalar(255, 0, 255), 2);
+		//line(vhHisImg, Point(0, hP2.y), Point(639, hP2.y), Scalar(255, 0, 255), 2);
 		rectangle(vhHisImg, Rect(selectedP1, selectedP2), Scalar(0, 255, 0), 3);
 
 
 		//imshow("Origin", input);
 		imshow("Direction Histogram", vhHisImg);
+
+		if (selectedP1 == Point(0, 0) && selectedP2 == Point(0, 0)) {
+			if (waitKey(30) >= 0) break;
+			continue;
+		}
+
+		Mat plateImg = input(Rect(selectedP1, selectedP2));
+
+		cout << "Debug: cropping the plate completed" << endl;
+
+		int index = 0;
+		Mat charImgArray[9];
+		Mat * charImg = charImgArray;
+		Point2i topLeftArray[9];
+		Point2i * topLeft = topLeftArray;
 		
+		findCharacter(plateImg, charImg, index, topLeft);
+		
+		cout << "So ky tu: " << index << endl;
+
+		if (index < 8) {
+			if (waitKey(30) >= 0) break;
+			continue;
+		}
+
+		sortPlate(charImg, topLeft, index);
+
+		cout << "Bang so xe: ";
+		int im = index - 1;
+		while (im >= 0) {
+			//imshow("num " + char(im), charImg[im]);
+
+			if (im == 6) {
+				//char regChar = detectCharacter(charImg[im]);
+			}
+			else if (im == 5) {
+				/*String regChar = detecCharacter(charImg[im]);
+				if (regChar not in range 'A' to 'Z') {
+				regChar = detectNumber(charImg, im);
+				}*/
+			}
+			else {
+				char regChar = detectNumber(charImg, im);
+				cout << regChar;
+			}
+
+			im--;
+		}
+
+
+		cout << "So ky tu: " << index << endl;
+
+		//int im = index - 1;
+		while (im >= 0) {
+			// int im = 8;
+			//cout << charImg[im].cols << " : " << charImg[im].rows << endl;
+			// Scalar color = Scalar(255,255,255);
+			// line(charImg[im], Point(charImg[im].cols/3, 0), Point(charImg[im].cols/3, charImg[im].rows), color, 1, CV_AA);
+			// line(charImg[im], Point(charImg[im].cols/3*2, 0), Point(charImg[im].cols/3*2, charImg[im].rows), color, 1, CV_AA);
+			// line(charImg[im], Point(0, charImg[im].rows/6), Point(charImg[im].cols, charImg[im].rows/6), color, 1, CV_AA);
+			// line(charImg[im], Point(0, charImg[im].rows/6*2), Point(charImg[im].cols, charImg[im].rows/6*2), color, 1, CV_AA);
+			// line(charImg[im], Point(0, charImg[im].rows/6*3), Point(charImg[im].cols, charImg[im].rows/6*3), color, 1, CV_AA);
+			// line(charImg[im], Point(0, charImg[im].rows/6*4), Point(charImg[im].cols, charImg[im].rows/6*4), color, 1, CV_AA);
+			// line(charImg[im], Point(0, charImg[im].rows/6*5), Point(charImg[im].cols, charImg[im].rows/6*5), color, 1, CV_AA);
+			//imshow("num " + char(im), charImg[im]);
+
+			int charSquare[3][6] = { { 0 } };
+			int charBit = 0;
+			char regChar = '-';
+
+			int black = 0, white = 0;
+			for (int l = 0; l < 6; l++) {
+				for (int c = 0; c < 3; c++) {
+					white = 0;
+					black = 0;
+					for (int i = 0 + c*charImg[im].cols / 3; i < (c + 1)*charImg[im].cols / 3; i++) {
+						for (int j = 0 + l*charImg[im].rows / 6; j < (l + 1)*charImg[im].rows / 6; j++) {
+							//cout << (int)charImg[0].at<uchar>(Point(i, j)) << " ";
+							if ((int)charImg[im].at<uchar>(Point(i, j)) == 0) black++;
+							else white++;
+						}
+						//cout << endl;
+					}
+					// cout << "[" << l << "," << c << "]" << endl;
+					// cout << "black: " << black << " - white: " << white << endl;
+					// cout << "---------------------------------" << endl;
+					if (black > white / 4) {
+						//if (white > 0){
+						charSquare[c][l] = 1;
+						charBit += pow(2, l * 3 + c);
+					}
+				}
+			}
+
+			//dec2bin(charBit);
+
+			if (charImg[im].cols < 60) {
+				regChar = '1';
+			}
+			else {
+				//cout << charBit << endl;
+				regChar = getChar(charBit);
+			}
+
+			//cout << charBit << endl;
+			cout << regChar;
+
+			im--;
+		}
+		cout << endl;
+	
 		if (waitKey(30) >= 0) break;
 		//cout << linesA.size() << " " << linesB.size() << endl;
 		//cout << linesA.max_size() << " " << linesB.max_size() << endl;
