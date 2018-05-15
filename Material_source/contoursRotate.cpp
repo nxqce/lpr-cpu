@@ -171,7 +171,7 @@ int main() {
 		// GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
 		// Canny(plateBlurImg, plateEdgeImg, 50, 300, 3);
 
-		vector<Mat> plates, edgePlates;
+		vector<Mat> plates, edgePlates, diEdgePlates;
 		int j = 0;
 		for (int i = 0; i < totalPoly; i++) {
 			Rect r = boundRect[i];
@@ -183,6 +183,7 @@ int main() {
 				Rect sr = Rect(Point(r.tl().x - 20, r.tl().y - 20), Point(r.br().x + 20, r.br().y + 20));
 				plates.push_back(input(sr));
 				edgePlates.push_back(edgeImg(sr));
+				diEdgePlates.push_back(diEdgeImg(sr));
 
 				if (b.size.height < 100) continue;
 				RotatedRect rRect = RotatedRect(b);
@@ -199,6 +200,7 @@ int main() {
 		Mat charImgArray[9];
 		Point2i topLeftArray[9];
 		for (int i = 0; i < edgePlates.size(); i++) {
+			//Hough line
 			CvMemStorage* linesMem = cvCreateMemStorage(0);
 			IplImage plate = edgePlates[i];
 			CvSeq* linesA = cvHoughLines2(&plate, linesMem, CV_HOUGH_PROBABILISTIC, 1, CV_PI / 180, 70, 30, 50);
@@ -210,88 +212,86 @@ int main() {
 			}
 
 			float avgA = 0;
+			int avgS = 0;
 			for (size_t j = 0; j < linesA->total; j++) {
 				Point* lP = (Point*)cvGetSeqElem(linesA, j);
 				float w = abs(lP[0].x - lP[1].x);
 				float h = lP[0].y - lP[1].y;
 				float tan = h / w;
+				if (tan > 1 || tan < -1) continue;
 				avgA += atan(tan);
+				avgS++;
 				
 				//line(plates[i], lP[0], lP[1], Scalar(255,0,0), 1, CV_AA);
 				//line(plates[i], lP[0], lP[0], Scalar(255, 255, 0), 3, CV_AA);
 				//line(plates[i], lP[1], lP[1], Scalar(0, 0, 255), 3, CV_AA);
 			}
-			avgA = avgA / linesA->total;
+			avgA = avgA / avgS;
+			double angle = -avgA * 180 / CV_PI;
 
 			cvClearMemStorage(linesMem);
 			cvReleaseMemStorage(&linesMem);
 
-			double angle = avgA * 180 / CV_PI;
-			if (angle > 0) angle = 40 - angle;
-			else angle = - angle - 50;
-
+			//Rotate plate, edge
 			Point2f center((plates[i].cols - 1) / 2.0, (plates[i].rows - 1) / 2.0);
 			Mat rot = getRotationMatrix2D(center, angle, 1.0);
-			// determine bounding rectangle, center not relevant
 			Rect bbox = RotatedRect(cv::Point2f(), plates[i].size(), angle).boundingRect();
-			// adjust transformation matrix
 			rot.at<double>(0, 2) += bbox.width / 2.0 - plates[i].cols / 2.0;
 			rot.at<double>(1, 2) += bbox.height / 2.0 - plates[i].rows / 2.0;
 			warpAffine(plates[i], plates[i], rot, bbox.size());
+			warpAffine(diEdgePlates[i], diEdgePlates[i], rot, bbox.size());
+
+			//Find contours again to crop the plate
+			CvMemStorage *contoursMem2 = cvCreateMemStorage(0);
+			CvSeq *contours2 = 0;
+			IplImage plate2 = diEdgePlates[i];
+
+			int n = cvFindContours(&plate2, contoursMem2, &contours2, sizeof(CvContour), CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
+			if (n < 1) {
+				cvClearMemStorage(contoursMem2);
+				cvReleaseMemStorage(&contoursMem2);
+				continue;
+			}
+			/// Approximate contours to polygons and get bounding rects
+			vector<vector<Point> > contours_poly2(n);
+			vector<CvRect> boundRect2(n);
+
+			CvMemStorage *polyMem2 = cvCreateMemStorage(0);
+			CvSeq *poly2;
+
+			poly2 = cvApproxPoly(contours2, sizeof(CvContour), polyMem2, CV_POLY_APPROX_DP, 3, 1);
+			int totalPoly2 = 0;
+			for (CvSeq *j = poly2; j != NULL; j = j->h_next) {
+				boundRect2[totalPoly2] = cvBoundingRect((CvContour*)j, 1);
+				totalPoly2++;
+			}
+			
+			/// Draw bonding rects
+			// GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
+			// Canny(plateBlurImg, plateEdgeImg, 50, 300, 3);
+
+			Mat plates2 = plates[i].clone();
+			int j = 0;
+			for (int j = 0; j < totalPoly2; j++) {
+				Rect r = boundRect2[j];
+				double rate = r.width / (double)r.height;
+				if (rate > 1.3 && rate < 1.4 && r.height > 30) {
+					rectangle(plates[i], r, Scalar(0, 0, 255), 1, 8, 0);
+					plates2 = plates[i](r);
+				}
+			}
 
 			imshow(to_string(i), plates[i]);
 
-			//Mat binPlate;
-			//threshold(plates[i], binPlate, 100, 255, CV_THRESH_BINARY);
 
-			//imshow("sdfks", binPlate);
-
-			//CvMemStorage *contoursMem2 = cvCreateMemStorage(0);
-			//CvSeq *contours2 = 0;
-			//IplImage plate2 = binPlate;
-
-			//int n = cvFindContours(&plate2, contoursMem2, &contours2, sizeof(CvContour), CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, cvPoint(0, 0));
-			//
-			///// Approximate contours to polygons and get bounding rects
-			//vector<vector<Point> > contours_poly2(n);
-			//vector<CvRect> boundRect2(n);
-
-			//CvMemStorage *polyMem2 = cvCreateMemStorage(0);
-			//CvSeq *poly2;
-
-			//poly2 = cvApproxPoly(contours2, sizeof(CvContour), polyMem2, CV_POLY_APPROX_DP, 3, 1);
-			//int totalPoly2 = 0;
-			//for (CvSeq *j = poly2; j != NULL; j = j->h_next) {
-			//	boundRect2[totalPoly2] = cvBoundingRect((CvContour*)j, 1);
-			//	totalPoly2++;
-			//}
-			//
-			///// Draw bonding rects
-			//// GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
-			//// Canny(plateBlurImg, plateEdgeImg, 50, 300, 3);
-
-			//Mat plates2 = plates[i].clone();
-			//int j = 0;
-			//for (int j = 0; j < totalPoly2; j++) {
-			//	Rect r = boundRect2[j];
-			//	double rate = r.width / (double)r.height;
-			//	if (r.height > 50) {
-			//		rectangle(plates[i], r, Scalar(0, 0, 255), 1, 8, 0);
-			//		plates2 = plates[i](r);
-			//	}
-			//}
-
-			//imshow(to_string(i), plates[i]);
-
-
-			//int tempIndex = 0;
-			//findCharacter(plates2, charImgArray, tempIndex, topLeftArray);
-			//cout << "debug" << endl;
-			//if (tempIndex > 7 && tempIndex < 10) {
-			//	index = tempIndex;
-			//	imshow("Plate", plates2);
-			//	break;
-			//}
+			int tempIndex = 0;
+			findCharacter(plates2, charImgArray, tempIndex, topLeftArray);
+			cout << "debug" << endl;
+			if (tempIndex > 7 && tempIndex < 10) {
+				index = tempIndex;
+				imshow("Plate", plates2);
+				break;
+			}
 		}
 
 		cvClearMemStorage(contoursMem);
