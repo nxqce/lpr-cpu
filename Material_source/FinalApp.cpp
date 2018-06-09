@@ -425,6 +425,7 @@ int main() {
 			if ((im == 5 && index == 8) || (im == 6 && index == 9)) {
 				bitwise_not(charImgArray[im], charImgArray[im]);
 				string regChar = detectChar(charImgArray[im]);
+				imshow("helo", charImgArray[im]);
 				long returnNum = returnChar(regChar);
 				result[run] = (returnNum == 99) ? 127 : returnNum;
 				cout << " - " << regChar << " ";
@@ -713,19 +714,19 @@ string checkInner(Mat input) {
 	String result;
 
 	int black = 0, white = 0, damm = 0;
-	for (int l = 0; l < 6; l++) {
+	for (int l = 0; l < 7; l++) {
 		for (int c = 0; c < 3; c++) {
 			white = 0;
 			black = 0;
-			if (c != 0 && c != 2 && l != 0 && l != 5) {
+			if (c != 0 && c != 2 && l != 0 && l != 6) {
 				for (int i = 0 + c * input.cols / 3.0; i < (c + 1)*input.cols / 3.0; i++) {
-					for (int j = 0 + l * input.rows / 6.0; j < (l + 1)*input.rows / 6.0; j++) {
+					for (int j = 0 + l * input.rows / 7.0; j < (l + 1)*input.rows / 7.0; j++) {
 						if ((int)input.at<uchar>(Point(i, j)) == 0) black++;
 						else white++;
 					}
 				}
 				damm++;
-				if (black > white / 3) {
+				if ((double)black > (double)white / 4.0) {
 					result += "1";
 				}
 				else {
@@ -804,7 +805,7 @@ String checkMidEdge(Mat input) {
 					}
 				}
 				damm++;
-				if (black > white / 3) {
+				if ((double)black > (double)white / 4.0) {
 					//cout << "Mieng den " << l << " " << c << endl;
 					result += "1";
 				}
@@ -868,11 +869,15 @@ String checkMidEdge(Mat input) {
 		String temp = checkInner(input);
 		if (toNumber == 1111111111) {
 			if (checkBD(input) == 0) return result;
-			if (temp == "0110" || temp == "0100" || temp == "0010") result = "B";
+			int test = stoi(temp);
+			if (test > 0) result = "B";
+			//if (temp == "01000" || temp == "00100" || temp == "00010") result = "B";
 			else result = "D";
 		}
 		else if (toNumber == 111111110) {
-			if (temp == "0110" || temp == "0100" || temp == "0010") result = "H";
+			int test = stoi(temp);
+			if (test > 0) result = "H";
+			//if (temp == "01000" || temp == "00100" || temp == "00010") result = "H";
 			else result = checkMN(input);
 		}
 	}
@@ -1125,7 +1130,7 @@ void findCharacter(Mat input, Mat *charImg, int &index, Point2i *topLeft) {
 	//Mat edgeImg;
 	//Canny(plateGrayImg, plateBinImg, lowThreshold, lowThreshold*ratio, kernel_size);
 
-	threshold(plateGrayImg, plateBinImg, 85, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);
+	threshold(plateGrayImg, plateBinImg, 90, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);
 	//adaptiveThreshold(plateGrayImg, plateBinImg, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 9, 1);
 
 	//dilate(plateBinImg, plateBinImg, element, Point(-1,-1), 2);
