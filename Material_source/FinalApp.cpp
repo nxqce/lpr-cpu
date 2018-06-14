@@ -473,40 +473,8 @@ int main() {
 		if (run < 8) continue;
 
 		//For greater accurate
-		//add 
-		if (_showTime < 3) {
-			_sizeBuf = 0;
-			for (int i = 0; i < run; i++) {
-				int flagSame = 0;
-
-				if (i >= _showBuffer.size()) {
-					struct _showValue temp;
-					temp.value = result[i];
-					temp.num++;
-					vector<struct _showValue> newValue;
-					newValue.push_back(temp);
-					_showBuffer.push_back(newValue);
-					cout << "ASDASDASDASDASDASDASDASDASDASDASDASDASDASD --- " << run << " " << i << " " << _showBuffer.size() << endl;
-				}
-
-				for (int j = 0; j < _showBuffer[i].size(); j++) {
-					if (result[i] == _showBuffer[i][j].value) {
-						_showBuffer[i][j].num++;
-						flagSame = 1;
-						break;
-					}
-				}
-				if (flagSame == 0) {
-					struct _showValue temp;
-					temp.value = result[i];
-					temp.num++;
-					_showBuffer[i].push_back(temp);
-
-				}
-			}
-		}
 		//show
-		else if (_showTime == 3 || _showTime == 0) {
+		if (_showTime == 3 || _showTime == 0) {
 			//int sizeBuff = (run < _showBuffer.size()) ? run : _showBuffer.size();
 			int sizeBuff = _showBuffer.size();
 			cout << "SIZE BUFFER FUCK YOU BITCH " << sizeBuff << "\n";
@@ -550,6 +518,38 @@ int main() {
 			}
 			_showBuffer.resize(8);
 			_showTime = 0;
+		}
+		//add 
+		else if (_showTime < 3) {
+			_sizeBuf = 0;
+			for (int i = 0; i < run; i++) {
+				int flagSame = 0;
+
+				if (i >= _showBuffer.size()) {
+					struct _showValue temp;
+					temp.value = result[i];
+					temp.num++;
+					vector<struct _showValue> newValue;
+					newValue.push_back(temp);
+					_showBuffer.push_back(newValue);
+					cout << "ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDSADASDASDAS --- " << run << " " << i << " " << _showBuffer.size() << endl;
+				}
+
+				for (int j = 0; j < _showBuffer[i].size(); j++) {
+					if (result[i] == _showBuffer[i][j].value) {
+						_showBuffer[i][j].num++;
+						flagSame = 1;
+						break;
+					}
+				}
+				if (flagSame == 0) {
+					struct _showValue temp;
+					temp.value = result[i];
+					temp.num++;
+					_showBuffer[i].push_back(temp);
+
+				}
+			}
 		}
 
 		_showTime++;
@@ -918,13 +918,15 @@ String detectNumber(Mat input) {
 	String detectedChar, step1_Char;
 	step1_Char = checkCorner(input);
 
-	if (step1_Char == "1110" || input.cols < 10) {
+	if (input.cols < 23) {
 		detectedChar = "1";
 	}
 	else if (step1_Char == "0010" || step1_Char == "0110") {
+		cout << "---------------------------------------------------DAY LA SO 4\n";
 		detectedChar = "4";
 	}
 	else if (step1_Char == "1101") {
+		cout << "---------------------------------------------------DAY LA SO 7\n";
 		detectedChar = "7";
 	}
 	else {
@@ -974,6 +976,9 @@ String checkMidEdgeNumber(Mat input) {
 	case 110101001010:
 		result = "2";
 		break;
+	case 110101001011:
+		result = "2";
+		break;
 	case  10100001010:
 		result = "2";
 		break;
@@ -983,6 +988,9 @@ String checkMidEdgeNumber(Mat input) {
 		result = "3";
 		break;
 	case 101011011111:
+		result = "5";
+		break;
+	case 101011010111:
 		result = "5";
 		break;
 	case 111011111111:
@@ -1183,8 +1191,8 @@ void findCharacter(Mat input, Mat *charImg, int &index, Point2i *topLeft) {
 		if (index > 8) break;
 		Rect rr = boundRect[i];
 		Rect r;
-		if (rr.tl().x > 2 && rr.tl().y > 2 && rr.br().x < 268 && rr.br().y < 198)
-			r = Rect(Point(rr.tl().x - 2, rr.tl().y - 2),Point(rr.br().x + 2,rr.br().y +2));
+		if (rr.tl().x > 1 && rr.tl().y > 1 && rr.br().x < 269 && rr.br().y < 199)
+			r = Rect(Point(rr.tl().x - 1, rr.tl().y - 1), Point(rr.br().x + 1,rr.br().y + 1));
 		else r = rr;
 		double rate = r.width / (double)r.height;
 		if ((rate > 0.2f && rate < 0.6f) && (r.height < 100 && r.height > 50)) {
