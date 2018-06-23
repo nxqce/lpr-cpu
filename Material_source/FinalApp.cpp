@@ -36,49 +36,6 @@ char getChar(int code);
 void findCharacter(Mat input, Mat *charImg, int &index, Point2i *topLeft);
 void sortPlate(Mat *charImg, Point2i *topLeft, int index);
 
-/* //char detectNumber(Mat * charImg, int im) {
-//	//cout << "Debug: detectNumber" << endl;
-//	int charSquare[3][6] = { { 0 } };
-//	int charBit = 0;
-//	char regChar = '-';
-//
-//	int black = 0, white = 0;
-//	for (int l = 0; l < 6; l++) {
-//		for (int c = 0; c < 3; c++) {
-//			white = 0;
-//			black = 0;
-//			for (int i = 0 + c*charImg[im].cols / 3; i < (c + 1)*charImg[im].cols / 3; i++) {
-//				for (int j = 0 + l*charImg[im].rows / 6; j < (l + 1)*charImg[im].rows / 6; j++) {
-//					//cout << (int)charImg[0].at<uchar>(Point(i, j)) << " ";
-//					if ((int)charImg[im].at<uchar>(Point(i, j)) == 0) black++;
-//					else white++;
-//				}
-//				//cout << endl;
-//			}
-//			// cout << "[" << l << "," << c << "]" << endl;
-//			// cout << "black: " << black << " - white: " << white << endl;
-//			// cout << "---------------------------------" << endl;
-//			if (white > black / 4) {
-//				//if (white > 0){
-//				charSquare[c][l] = 1;
-//				charBit += pow(2, l * 3 + c);
-//			}
-//		}
-//	}
-//
-//	//cout << charImg[im].cols << endl;
-//
-//	if (charImg[im].cols < 20) {
-//		regChar = '1';
-//	}
-//	else {
-//		//cout << charBit << endl;
-//		regChar = getChar(charBit);
-//	}
-//
-//	return regChar;
-//} */
-
 String checkCorner(Mat input);
 String checkMidEdgeNumber(Mat input);
 String detectNumber(Mat input);
@@ -130,7 +87,7 @@ int main() {
 	VideoCapture cap(0); // open the default camera
 	if (!cap.isOpened())  // check if we succeeded
 		return -1;
-	cap.set(CV_CAP_PROP_FPS, 15);
+	//cap.set(CV_CAP_PROP_FPS, 15);
 
 	Mat vhHisImg(480, 640, CV_8UC3, Scalar(0, 0, 0));
 	for (;;)
@@ -162,20 +119,20 @@ int main() {
 		equalizeHist(grayImg, grayImg);
 
 		///---------Ghi anh xam xuong FPGA
-		clock_t a = clock();
+		//clock_t a = clock();
 		writeImgToDmaMem0(hPCIE, grayImg);
 		printf("The gray image is sent\n");
-		clock_t b = clock();
+		//clock_t b = clock();
 
-		double c = double(b - a) / CLOCKS_PER_SEC;
-		cout << "hrfgjhgfsddghui hjksdhuidddddddddddffffffffffff: " << c << endl;
+		//double c = double(b - a) / CLOCKS_PER_SEC;
+		//cout << "Write through PCIE by DMA time: " << c << endl;
 		//int lowThreshold = 70;
 		//int const max_lowThreshold = 100;
 		//int ratio = 3;
 		//int kernel_size = 3;
-		////imshow("Input", input);
 		//Mat edgeImg;
 		//Canny(grayImg, edgeImg, lowThreshold, lowThreshold*ratio, kernel_size);
+		//imshow("From FPGA", edgeImg);
 
 		///---------Gui tin hieu enable
 		Mask = 4;
@@ -188,12 +145,12 @@ int main() {
 		bPass = TRUE;
 		DWORD Status;
 
-		do {
-			bPass = PCIE_Read32(hPCIE, DEMO_PCIE_USER_BAR, DEMO_PCIE_IO_BUTTON_ADDR, &Status);
-			printf("\n%d\n", Status);
-			if (!bPass) printf("Read failed\n");
-		} while (Status % 2 == 1);
-		printf("\n%d - FPGA Done\n", Status);
+		//do {
+		//	bPass = PCIE_Read32(hPCIE, DEMO_PCIE_USER_BAR, DEMO_PCIE_IO_BUTTON_ADDR, &Status);
+		//	printf("\n%d\n", Status);
+		//	if (!bPass) printf("Read failed\n");
+		//} while (Status % 2 == 1);
+		//printf("\n%d - FPGA Done\n", Status);
 
 		///---------Read the edge image
 		Mat output(480, 640, CV_8UC1);
@@ -201,7 +158,7 @@ int main() {
 		printf("\nEdge image is read\n");
 
 		///---------Transfer canny to threshold
-		/*imshow("From FPGA", output);*/
+		//imshow("From FPGA", output);
 		Mat edgeImg = output;
 		threshold(edgeImg, edgeImg, 100, 255, CV_THRESH_BINARY);
 		imshow("From FPGA", output);
@@ -217,9 +174,9 @@ int main() {
 		//Mat element = getStructuringElement(MORPH_RECT, Size(17, 3));
 		//morphologyEx(edgeImg, edgeImg, CV_MOP_CLOSE, element);
 
-		cout << "Pass bitwise_not\n";
+		//cout << "Pass bitwise_not\n";
 
-		imshow("bin", diEdgeImg);
+		//imshow("bin", diEdgeImg);
 
 		CvMemStorage *contoursMem = cvCreateMemStorage(0);
 		CvSeq *contours = 0;
@@ -234,7 +191,7 @@ int main() {
 			cvReleaseMemStorage(&contoursMem);
 			continue;
 		}
-		cout << "Pass find contour\n";
+		//cout << "Pass find contour\n";
 
 		/// Approximate contours to polygons and get bounding rects
 		vector<vector<Point> > contours_poly(n);
@@ -252,7 +209,7 @@ int main() {
 			totalPoly++;
 		}
 
-		cout << "Pass approx\n";
+		//cout << "Pass approx\n";
 
 		/// Draw bonding rects
 		// GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
@@ -282,9 +239,9 @@ int main() {
 				j++;
 			}
 		}
-		imshow("Contour temp", img);
+		imshow("Contours", img);
 
-		cout << "Pass add contour\n";
+		//cout << "Pass add contour\n";
 
 		int index = 0;
 		Mat charImgArray[9];
@@ -298,7 +255,7 @@ int main() {
 			if (linesA->total < 1) {
 				cvClearMemStorage(linesMem);
 				cvReleaseMemStorage(&linesMem);
-				cout << "CHUA tim dc Line nao\n";
+				//cout << "CHUA tim dc Line nao\n";
 				continue;
 			}
 
@@ -326,7 +283,7 @@ int main() {
 			Mat rot = getRotationMatrix2D(center, angle, 1.0);
 
 			Point2f cen = Point2f();
-			cout << "-------A N G L E--------" << angle << endl;
+			//cout << "-------A N G L E--------" << angle << endl;
 			Rect bbox = RotatedRect(cen, (cv::Size2f)plates[i].size(), (double)angle).boundingRect2f();
 
 			rot.at<double>(0, 2) += bbox.width / 2.0 - center.x;
@@ -382,7 +339,7 @@ int main() {
 				}
 			}
 			//imshow("conto on plate", plates[i]);
-			imshow("cropped plate", cropedPlates);
+			//imshow("cropped plate", cropedPlates);
 			//imshow(to_string(i), plates[i]);
 
 			cvClearMemStorage(contoursMem2);
@@ -393,7 +350,7 @@ int main() {
 
 			int tempIndex = 0;
 			findCharacter(cropedPlates, charImgArray, tempIndex, topLeftArray);
-			cout << "So ky tu temp: " << tempIndex << endl;
+			//cout << "So ky tu temp: " << tempIndex << endl;
 			if (tempIndex > 7 && tempIndex < 10) {
 				index = tempIndex;
 				break;
@@ -413,7 +370,7 @@ int main() {
 			continue;
 		}
 
-		cout << "Pass catch plate\n";
+		//cout << "Pass catch plate\n";
 
 		sortPlate(charImgArray, topLeftArray, index);
 
@@ -425,7 +382,7 @@ int main() {
 			if ((im == 5 && index == 8) || (im == 6 && index == 9)) {
 				bitwise_not(charImgArray[im], charImgArray[im]);
 				string regChar = detectChar(charImgArray[im]);
-				imshow("helo", charImgArray[im]);
+				//imshow("helo", charImgArray[im]);
 				long returnNum = returnChar(regChar);
 				result[run] = (returnNum == 99) ? 127 : returnNum;
 				cout << " - " << regChar << " ";
@@ -443,7 +400,7 @@ int main() {
 					result[run] = (long)number;
 				}
 				else result[run] = 127;
-				cout << regChar << "\nxuong dong   ";
+				//cout << regChar << "\nxuong dong   ";
 			}
 			else {
 				bitwise_not(charImgArray[im], charImgArray[im]);
@@ -456,7 +413,7 @@ int main() {
 				else result[run] = 127;
 				
 				if (im == 0) {
-					cout << "SO CUOI CUNG NE " << regChar << " ";
+					//cout << "SO CUOI CUNG NE " << regChar << " ";
 					im--;
 					run++;
 					continue;
@@ -477,7 +434,6 @@ int main() {
 		if (_showTime == 3 || _showTime == 0) {
 			//int sizeBuff = (run < _showBuffer.size()) ? run : _showBuffer.size();
 			int sizeBuff = _showBuffer.size();
-			cout << "SIZE BUFFER FUCK YOU BITCH " << sizeBuff << "\n";
 			int max = 0, value = 0;
 			vector<int> _showStream;
 			for (int i = 0; i < sizeBuff; i++) {
@@ -532,7 +488,7 @@ int main() {
 					vector<struct _showValue> newValue;
 					newValue.push_back(temp);
 					_showBuffer.push_back(newValue);
-					cout << "ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDSADASDASDAS --- " << run << " " << i << " " << _showBuffer.size() << endl;
+					//cout << "ASDASDASDASDASDASDASDASDASDASDASDASDASDASDASDSADASDASDAS --- " << run << " " << i << " " << _showBuffer.size() << endl;
 				}
 
 				for (int j = 0; j < _showBuffer[i].size(); j++) {
@@ -561,12 +517,8 @@ int main() {
 		cvReleaseMemStorage(&contoursMem);
 		cvReleaseMemStorage(&polyMem);
 
-		try {
-			imshow("contours", img);
-		}
-		catch (Exception e) {
-			cout << "What the fuck\n";
-		}
+		//imshow("contours", img);
+	
 		//waitKey(0);
 
 		if (waitKey(30) >= 0) break;
@@ -634,7 +586,7 @@ string checkRightEdge(Mat input) {
 	}
 
 	return result;
-}
+}							
 
 string checkTopEdge(Mat input, string type) {
 	String result;
@@ -922,11 +874,11 @@ String detectNumber(Mat input) {
 		detectedChar = "1";
 	}
 	else if (step1_Char == "0010" || step1_Char == "0110") {
-		cout << "---------------------------------------------------DAY LA SO 4\n";
+		//cout << "---------------------------------------------------DAY LA SO 4\n";
 		detectedChar = "4";
 	}
 	else if (step1_Char == "1101") {
-		cout << "---------------------------------------------------DAY LA SO 7\n";
+		//cout << "---------------------------------------------------DAY LA SO 7\n";
 		detectedChar = "7";
 	}
 	else {
@@ -968,7 +920,7 @@ String checkMidEdgeNumber(Mat input) {
 		}
 	}
 
-	cout << "result: " << result << endl;
+	//cout << "result: " << result << endl;
 	long long int toNumber = stoll(result);
 	int check = 0;
 	switch (toNumber)
@@ -1007,7 +959,7 @@ String checkMidEdgeNumber(Mat input) {
 
 	if (check == 1) {
 		Mat mid = input(Rect(input.cols / 3.0, input.rows / 6.0 * 2.0, input.cols / 3.0, input.rows / 6.0 * 2.0));
-		imshow("cac", mid);
+		//imshow("cac", mid);
 		for (int i = 0; i < mid.cols; i++) {
 			for (int j = 0; j < mid.rows; j++) {
 				if ((int)mid.at<uchar>(Point(i, j)) == 0) black++;
@@ -1182,7 +1134,7 @@ void findCharacter(Mat input, Mat *charImg, int &index, Point2i *topLeft) {
 		boundRect[totalPoly] = cvBoundingRect((CvContour*)i, 1);
 		totalPoly++;
 	}
-	cout << "Debug poly" << endl;
+	//cout << "Debug poly" << endl;
 	/// Draw bonding rects
 	// GaussianBlur(plateImg, plateBlurImg, Size(3, 3), 0);
 	// Canny(plateBlurImg, plateEdgeImg, 50, 300, 3);
@@ -1203,10 +1155,7 @@ void findCharacter(Mat input, Mat *charImg, int &index, Point2i *topLeft) {
 			index++;
 		}
 	}
-	//imshow("plateBin", plateBinImg);
-	//if (index > 7 && index < 10) 
 	imshow("plate", plateImg);
-	//waitKey(0);
 
 	cvClearMemStorage(contoursMem);
 	cvClearMemStorage(polyMem);
@@ -1252,26 +1201,6 @@ char getChar(int code) {
 	else if ((int)(code & seven) == seven) return '7';
 
 	else return '*';
-}
-
-int dec2bin(int num) {
-	int total = 0;
-	int count = 0;
-	cout << endl;
-	while (num > 0)
-	{
-		total = num % 2;
-		num /= 2;
-		if (total == 1)
-			cout << total << " ";
-		else
-			cout << "  ";
-		if (count % 3 == 2)
-			cout << endl;
-		count++;
-	}
-	cout << endl;
-	return 0;
 }
 
 char PAT_GEN(Mat nIndex, int x, int y) {
@@ -1376,5 +1305,3 @@ long returnChar(string s) {
 	}
 	else return 99;
 }
-
-
