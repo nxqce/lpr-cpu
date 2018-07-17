@@ -90,25 +90,25 @@ lpr_EXTERNAL_OBJECTS =
 
 lpr: CMakeFiles/lpr.dir/main.cpp.o
 lpr: CMakeFiles/lpr.dir/build.make
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_videostab.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_ts.a
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_superres.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_stitching.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_contrib.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_nonfree.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_ocl.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_gpu.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_photo.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_objdetect.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_legacy.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_video.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_ml.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_calib3d.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_features2d.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_highgui.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_imgproc.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_flann.so.2.4.13
-lpr: /home/quangce/opencv-2.4.13.4/release/lib/libopencv_core.so.2.4.13
+lpr: /usr/local/lib/libopencv_videostab.so.2.4.13
+lpr: /usr/local/lib/libopencv_ts.a
+lpr: /usr/local/lib/libopencv_superres.so.2.4.13
+lpr: /usr/local/lib/libopencv_stitching.so.2.4.13
+lpr: /usr/local/lib/libopencv_contrib.so.2.4.13
+lpr: /usr/local/lib/libopencv_nonfree.so.2.4.13
+lpr: /usr/local/lib/libopencv_ocl.so.2.4.13
+lpr: /usr/local/lib/libopencv_gpu.so.2.4.13
+lpr: /usr/local/lib/libopencv_photo.so.2.4.13
+lpr: /usr/local/lib/libopencv_objdetect.so.2.4.13
+lpr: /usr/local/lib/libopencv_legacy.so.2.4.13
+lpr: /usr/local/lib/libopencv_video.so.2.4.13
+lpr: /usr/local/lib/libopencv_ml.so.2.4.13
+lpr: /usr/local/lib/libopencv_calib3d.so.2.4.13
+lpr: /usr/local/lib/libopencv_features2d.so.2.4.13
+lpr: /usr/local/lib/libopencv_highgui.so.2.4.13
+lpr: /usr/local/lib/libopencv_imgproc.so.2.4.13
+lpr: /usr/local/lib/libopencv_flann.so.2.4.13
+lpr: /usr/local/lib/libopencv_core.so.2.4.13
 lpr: CMakeFiles/lpr.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/media/sda6/DIP/linux/LPR/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable lpr"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/lpr.dir/link.txt --verbose=$(VERBOSE)
